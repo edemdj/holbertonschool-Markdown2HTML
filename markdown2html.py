@@ -6,21 +6,40 @@ import os
 
 def markdown_to_html(input_file, output_file):
     """
-    Convert Markdown headings to HTML.
+    Convert Markdown headings and unordered lists to HTML.
     """
     html_content = ""
+    in_list = False  
 
     try:
         with open(input_file, 'r', encoding='utf-8') as md_file:
             for line in md_file:
-                line = line.strip()  
-                if line.startswith('#'):  
-                    
+                line = line.strip()
+
+                
+                if line.startswith('#'):
                     heading_level = len(line.split(' ')[0])
-                    if 1 <= heading_level <= 6:  
-                        
+                    if 1 <= heading_level <= 6:
                         heading_text = line[heading_level:].strip()
                         html_content += f"<h{heading_level}>{heading_text}</h{heading_level}>\n"
+
+                
+                elif line.startswith('- '):
+                    if not in_list:  
+                        html_content += "<ul>\n"
+                        in_list = True
+                    list_item = line[2:].strip()
+                    html_content += f"    <li>{list_item}</li>\n"
+
+                
+                else:
+                    if in_list:
+                        html_content += "</ul>\n"
+                        in_list = False
+
+            
+            if in_list:
+                html_content += "</ul>\n"
 
         with open(output_file, 'w', encoding='utf-8') as html_file:
             html_file.write(html_content)
