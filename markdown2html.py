@@ -62,6 +62,6 @@ if __name__ == "__main__":
         print(f"Missing {input_file}", file=sys.stderr)
         sys.exit(1)
 
-    
+    # Convert Markdown to HTML
     markdown_to_html(input_file, output_file)
     sys.exit(0)
