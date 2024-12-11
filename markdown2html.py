@@ -1,67 +1,40 @@
 #!/usr/bin/python3
-"""Markdown to HTML converter."""
-
-import sys
-import os
-
-def markdown_to_html(input_file, output_file):
-    """
-    Convert Markdown headings and unordered lists to HTML.
-    """
-    html_content = ""
-    in_list = False  
-
-    try:
-        with open(input_file, 'r', encoding='utf-8') as md_file:
-            for line in md_file:
-                line = line.strip()
-
-                
-                if line.startswith('#'):
-                    heading_level = len(line.split(' ')[0])
-                    if 1 <= heading_level <= 6:
-                        heading_text = line[heading_level:].strip()
-                        html_content += f"<h{heading_level}>{heading_text}</h{heading_level}>\n"
-
-                
-                elif line.startswith('- '):
-                    if not in_list:  
-                        html_content += "<ul>\n"
-                        in_list = True
-                    list_item = line[2:].strip()
-                    html_content += f"    <li>{list_item}</li>\n"
-
-                
-                else:
-                    if in_list:
-                        html_content += "</ul>\n"
-                        in_list = False
-
-            
-            if in_list:
-                html_content += "</ul>\n"
-
-        with open(output_file, 'w', encoding='utf-8') as html_file:
-            html_file.write(html_content)
-
-    except Exception as e:
-        print(f"Error: {e}", file=sys.stderr)
-        sys.exit(1)
+""" markdown to html """
 
 if __name__ == "__main__":
-    
-    if len(sys.argv) != 3:
-        print("Usage: ./markdown2html.py README.md README.html", file=sys.stderr)
-        sys.exit(1)
 
-    input_file = sys.argv[1]
-    output_file = sys.argv[2]
+    import sys
+    import os.path
 
-    
-    if not os.path.isfile(input_file):
-        print(f"Missing {input_file}", file=sys.stderr)
-        sys.exit(1)
+    if len(sys.argv) < 3:
+        sys.exit("Usage: ./markdown2html.py README.md README.html")
+    elif (not os.path.isfile(sys.argv[1]) or not os.path.exists(sys.argv[1])):
+        sys.exit("Missing {}".format(sys.argv[1]))
+    else:
+        text = []
+        with open(sys.argv[1], encoding='utf-8') as md_file:
+            i = 0
+            for line in md_file:
+                if line.split(' ')[0][0] == '#':
+                    length = len(line.split(' ')[0])
+                    if length < 7:
+                        heading = " ".join(line.split(' ')[1:-1]) +\
+                            line.split(' ')[-1][:-1]
+                        text.append("<h{}>{}</h{}>".format(
+                            length, heading, length))
+                    else:
+                        text.append(line)
+                elif line.split(' ')[0][0] == '-':
+                    lista = line.split(' ')[1][:-1]
+                    if i == 0:
+                        text.append("<ul>\n<li>{}</li>".format(lista))
+                        text.append("</ul>")
+                    else:
+                        text.insert(-1, "<li>{}</li>".format(lista))
+                    i += 1
+                else:
+                    text.append(line)
 
-    # Convert Markdown to HTML
-    markdown_to_html(input_file, output_file)
-    sys.exit(0)
+        with open(sys.argv[2], 'w', encoding='utf-8') as html_file:
+            html_file.write('\n'.join(text)+'\n')
+            
