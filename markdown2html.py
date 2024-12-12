@@ -14,6 +14,7 @@ if __name__ == "__main__":
     text = []
     in_list = False  
     list_type = None  
+    in_paragraph = False  
 
     with open(sys.argv[1], encoding='utf-8') as md_file:
         for line in md_file:
@@ -21,24 +22,22 @@ if __name__ == "__main__":
 
             
             if line.startswith("#"):
+                if in_paragraph:
+                    text.append("</p>")
+                    in_paragraph = False
+                if in_list:
+                    text.append(f"</{list_type}>")
+                    in_list = False
+                    list_type = None
                 heading_level = len(line.split(' ')[0])
-                if heading_level < 7:
-                    heading_text = " ".join(line.split(' ')[1:])
-                    text.append(f"<h{heading_level}>{heading_text}</h{heading_level}>")
+                heading_text = " ".join(line.split(' ')[1:])
+                text.append(f"<h{heading_level}>{heading_text}</h{heading_level}>")
 
-            
-            elif line.lstrip().startswith(tuple(f"{i}." for i in range(1, 10))):
-                if not in_list or list_type != "ol":
-                    if in_list:
-                        text.append(f"</{list_type}>")
-                    in_list = True
-                    list_type = "ol"
-                    text.append("<ol>")
-                list_item = line.lstrip().split('. ', 1)[1]
-                text.append(f"<li>{list_item}</li>")
 
-            
             elif line.lstrip().startswith("- "):
+                if in_paragraph:
+                    text.append("</p>")
+                    in_paragraph = False
                 if not in_list or list_type != "ul":
                     if in_list:
                         text.append(f"</{list_type}>")
@@ -48,15 +47,32 @@ if __name__ == "__main__":
                 list_item = line.lstrip()[2:]
                 text.append(f"<li>{list_item}</li>")
 
-            
-            else:
+
+            elif line.strip():
                 if in_list:
                     text.append(f"</{list_type}>")
                     in_list = False
                     list_type = None
-                text.append(line)
+                if not in_paragraph:
+                    text.append("<p>")
+                    in_paragraph = True
+                else:
+                    text.append("<br/>")
+                text.append(line.strip())
 
-        
+
+            else:
+                if in_paragraph:
+                    text.append("</p>")
+                    in_paragraph = False
+                if in_list:
+                    text.append(f"</{list_type}>")
+                    in_list = False
+                    list_type = None
+
+
+        if in_paragraph:
+            text.append("</p>")
         if in_list:
             text.append(f"</{list_type}>")
 
