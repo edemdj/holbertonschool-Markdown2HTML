@@ -6,6 +6,7 @@ if __name__ == "__main__":
     import sys
     import os
     import re
+    import hashlib
 
     if len(sys.argv) < 3:
         sys.exit("Usage: ./markdown2html.py README.md README.html")
@@ -13,25 +14,33 @@ if __name__ == "__main__":
         sys.exit(f"Missing {sys.argv[1]}")
 
     text = []
-    in_list = False  # Track if we are inside a list
-    list_type = None  # Track the type of list ('ul')
-    in_paragraph = False  # Track if we are inside a paragraph
+    in_list = False 
+    list_type = None  
+    in_paragraph = False  
 
     def parse_inline_markdown(line):
         """
         Replaces inline Markdown syntax with HTML tags:
         **text** -> <b>text</b>
         __text__ -> <em>text</em>
+        [[text]] -> MD5 hash of text
+        ((text)) -> Removes all 'c' (case insensitive)
         """
-        line = re.sub(r'\*\*(.+?)\*\*', r'<b>\1</b>', line)  # Bold
-        line = re.sub(r'__(.+?)__', r'<em>\1</em>', line)  # Italic
+
+        line = re.sub(r'\*\*(.+?)\*\*', r'<b>\1</b>', line)
+
+        line = re.sub(r'__(.+?)__', r'<em>\1</em>', line)
+
+        line = re.sub(r'\[\[(.+?)\]\]', lambda m: hashlib.md5(m.group(1).encode()).hexdigest(), line)
+
+        line = re.sub(r'\(\((.+?)\)\)', lambda m: re.sub(r'[cC]', '', m.group(1)), line)
         return line
 
     with open(sys.argv[1], encoding='utf-8') as md_file:
         for line in md_file:
             line = line.rstrip()
 
-            # Process headings
+
             if line.startswith("#"):
                 if in_paragraph:
                     text.append("</p>")
